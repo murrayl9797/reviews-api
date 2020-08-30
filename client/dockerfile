@@ -1,0 +1,11 @@
+FROM node:12-alpine
+
+WORKDIR /usr/src/app
+
+COPY . .
+
+RUN npm install
+
+#CMD ["npm", "rebuild", "node-sass"]
+#CMD ["npm", "run", "start"]
+#CMD ["npm", "run", "react-dev"]
