@@ -61,7 +61,7 @@ app.get('/reviews', (req, res) => {
   `
   , [product_id, sortParam])
     .then(dbRes => {
-      console.log(`Received response from query: `, dbRes.rows);
+      //console.log(`Received response from query: `, dbRes.rows);
 
       // Slice according to page and count
       const reviewArray = dbRes.rows.slice(page*count, page*count + count);
@@ -114,7 +114,7 @@ app.get('/reviews/meta', (req, res) => {
   `
   , [product_id])
     .then(dbRes => {
-      console.log(dbRes.rows);
+      //console.log(dbRes.rows);
       if (dbRes.rows.length === 0) {
         throw 'Product has no meta_data!';
       }
