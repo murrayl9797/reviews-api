@@ -7,7 +7,7 @@ const port = 4444;
 const { Client, Pool } = require('pg');
 const client = new Client({
   user: 'postgres',
-  host: 'db',
+  host: 'db', // Uses docker network to connect
   database: 'postgres',
   password: 'password',
   port: 5432,

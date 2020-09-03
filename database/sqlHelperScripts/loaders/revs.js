@@ -2,16 +2,24 @@ const fs = require("fs");
 const { Pool, Client } = require('pg');
 const copyFrom = require('pg-copy-streams').from;
 const tableName = 'reviews';
+const {
+  DB_USER,
+  DB_HOST,
+  DB_DATABASE,
+  DB_PASSWORD,
+  DB_PORT,
+  CSV_PATH
+} = '../config.js';
 
 //id,product_id,rating,date,summary,body,recommend,reported,reviewer_name,reviewer_email,response,helpfulness
-let fileStream = fs.createReadStream("/Users/liammurray/Desktop/hr/sdc/sdc-csvs/reviews.csv", {start: 108});
+let fileStream = fs.createReadStream(`${CSV_PATH}/reviews.csv`, {start: 108});
 // Connection to Postgres DB
 const pool = new Client({
-  user: 'postgres',
-  host: 'localhost',
-  database: 'postgres',
-  password: 'password',
-  port: 5432,
+  user: DB_USER,
+  host: DB_HOST,
+  database: DB_DATABASE,
+  password: DB_PASSWORD,
+  port: DB_PORT,
 });
 
 

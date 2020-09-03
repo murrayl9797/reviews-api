@@ -1,14 +1,22 @@
 const { Pool, Client } = require('pg');
 const tableName = 'char_revs_joined';
+const {
+  DB_USER,
+  DB_HOST,
+  DB_DATABASE,
+  DB_PASSWORD,
+  DB_PORT,
+  CSV_PATH
+} = '../config.js';
 
 // Connection to Postgres DB
 const client = new Client({
-  user: 'postgres',
-  host: 'localhost',
-  database: 'postgres',
-  password: 'password',
-  port: 5432,
-})
+  user: DB_USER,
+  host: DB_HOST,
+  database: DB_DATABASE,
+  password: DB_PASSWORD,
+  port: DB_PORT,
+});
 
 
 // Connect to DB
