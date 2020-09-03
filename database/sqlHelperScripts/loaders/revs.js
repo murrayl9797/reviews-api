@@ -12,7 +12,7 @@ const pool = new Client({
   database: 'postgres',
   password: 'password',
   port: 5432,
-})
+});
 
 
 // Code to stream CSV's into DB
@@ -67,7 +67,7 @@ pool.connect()
     // Create tables if they're not there:
     return pool.query(`
       CREATE TABLE IF NOT EXISTS ${tableName} (
-        id INTEGER,
+        id SERIAL,
         prod_id INTEGER,
         rating INTEGER,
         date VARCHAR(500),
@@ -91,7 +91,11 @@ pool.connect()
 
     //const query = "COPY events (person, action, thing) FROM STDIN CSV"
     const queryS = `COPY ${tableName} (id, prod_id, rating, date, summary, body, recommend, reported, reviewer_name, reviewer_email, response, helpfulness) FROM STDIN CSV`;
-    var dbStream = pool.query(copyFrom(queryS));
+    var dbStream = pool.query(copyFrom(`
+      COPY ${tableName}
+      (id, prod_id, rating, date, summary, body, recommend, reported,
+        reviewer_name, reviewer_email, response, helpfulness)
+      FROM STDIN CSV`));
 
     fileStream.on('error', (error) =>{
         console.log(`Error in reading file: ${error}`)
@@ -99,14 +103,25 @@ pool.connect()
 
     dbStream.on('error', (error) => {
         console.log(`Error in copy command: ${error}`)
-        pool.end();
+        //pool.end();
     })
 
     dbStream.on('finish', () => {
         console.log(`Completed loading data into ${tableName}`);
-        pool.end();
+        //pool.end();
     })
-    fileStream.pipe(dbStream);
+    return fileStream.pipe(dbStream);
+  })
+  .then(res => {
+    console.log(`Also update column 'prod_id' to 'product_id'`);
+    return pool.query(`
+      ALTER TABLE reviews
+      RENAME COLUMN prod_id TO product_id;
+    `)
+  })
+  .then(res => {
+    console.log(`Successfully renamed column, now close connection!`);
+    pool.end();
   })
   .catch(e => {
     console.log('Error in connecting/querying: ', e);
