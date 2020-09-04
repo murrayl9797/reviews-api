@@ -21,6 +21,12 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 
+//http://100.25.168.124/loaderio-eadb06ef7fa24ede3c3f4b0f355a7bd4.txt
+app.get('/loaderio-eadb06ef7fa24ede3c3f4b0f355a7bd4.txt', (req, res) => {
+  const fileContents = require('./loaderio-eadb06ef7fa24ede3c3f4b0f355a7bd4.txt');
+  res.send(fileContents);
+})
+
 
 
 /***********************************************************/
