@@ -6,7 +6,7 @@ const {
   DB_PASSWORD,
   DB_PORT,
   CSV_PATH
-} = '../config.js';
+} = require('./config');
 
 // Connection to Postgres DB
 const client = new Client({

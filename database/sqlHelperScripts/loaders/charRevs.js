@@ -9,7 +9,7 @@ const {
   DB_PASSWORD,
   DB_PORT,
   CSV_PATH
-} = '../config.js';
+} = require('../config.js');
 
 //id,characteristic_id,review_id,value
 let fileStream = fs.createReadStream(`${CSV_PATH}/characteristic_reviews.csv`, {start: 37});

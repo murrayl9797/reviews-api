@@ -9,7 +9,8 @@ const {
   DB_PASSWORD,
   DB_PORT,
   CSV_PATH
-} = '../config.js';
+} = require('../config.js');
+//console.log(CSV_PATH, 'HELLELELEELO');
 
 //https://images.unsplash.com/photo-1555689502-c4b22d76c56f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=668&q=80
 //id,review_id,url

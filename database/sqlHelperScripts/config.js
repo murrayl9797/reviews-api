@@ -1,6 +1,6 @@
 module.exports = {
-  DB_USER = 'postgres',
-  DB_HOST: 'localhost',
+  DB_USER: 'postgres',
+  DB_HOST: '100.25.168.124',
   DB_DATABASE: 'postgres',
   DB_PASSWORD: 'password',
   DB_PORT: 5432,
