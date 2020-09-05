@@ -1,5 +1,4 @@
 const { Pool, Client } = require('pg');
-const tableName = 'char_revs_joined';
 const {
   DB_USER,
   DB_HOST,
@@ -20,6 +19,7 @@ const client = new Client({
 });
 
 
+const tableName = 'char_revs_joined';
 // Connect to DB
 client.connect()
   .then(res => {

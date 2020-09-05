@@ -1,5 +1,4 @@
 const { Pool, Client } = require('pg');
-const tableName = 'meta_data';
 const {
   DB_USER,
   DB_HOST,
@@ -19,6 +18,7 @@ const client = new Client({
 });
 var start = Date.now();
 
+const tableName = 'meta_data';
 // Connect to DB
 client.connect()
   .then(res => {
