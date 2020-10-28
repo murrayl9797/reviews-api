@@ -1,18 +1,53 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const redis = require('redis');
 const app = express();
 const port = 4444;
 
-// host: 'the-name-for-my-postgres-container-within-the-docker-compose-yml-file'
+/***********************************************************/
+/*******************Connect to Postgres*********************/
+/***********************************************************/
 const { Client, Pool } = require('pg');
 const client = new Client({
   user: 'postgres',
-  host: 'db', // Uses docker network to connect
+  host: 'db', // Uses Docker network to connect
   database: 'postgres',
   password: 'password',
   port: 5432,
 })
-client.connect();
+const connectToDB = () => {
+  client.connect()
+    .then(resp => {
+      console.log(`Connected to Postgres DB!`);
+    })
+    .catch(err => {
+      console.log(`Couldn't connect to Postgres, try again.`);
+      setTimeout(() => {
+        connectToDB();
+      }, 3000);
+    });
+};
+connectToDB();
+
+/***********************************************************/
+/*******************Connect to Redis************************/
+/***********************************************************/
+const redisClient = redis.createClient({
+  host: 'redis', // Docker network
+  port: 6379
+});
+
+redisClient.on("error", (error) => {
+  console.error('Redis error:', error);
+});
+
+// Promisify Redis Functions
+const { promisify } = require("util");
+const getAsync = promisify(redisClient.get).bind(redisClient);
+const setExAsync = promisify(redisClient.setex).bind(redisClient);
+// getAsync('liam')
+//   .then((data) => console.log(data === null))
+//   .catch((data) => console.log('no', data));
 
 /***********************************************************/
 /*************************Middleware************************/
@@ -43,7 +78,7 @@ app.get('/reviews', (req, res) => {
   console.log(`Received API request for /reviews`);
 
   // Parse query parameters
-  const product_id = req.query.product_id;
+  const product_id = req.query.product_id || 1;
   const page = req.query.page || 0;
   const count = req.query.count || 5;
   const sort = req.query.sort || 'newest';
@@ -84,7 +119,7 @@ app.get('/reviews', (req, res) => {
             date: revObj.date,
             reviewer_name: revObj.reviewer_name,
             helpfulness: revObj.helpfulness,
-            photos: [],
+            photos: [], // Need to query photos table
           }
         )
       })
