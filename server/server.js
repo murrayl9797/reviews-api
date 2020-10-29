@@ -8,17 +8,18 @@ const port = 4444;
 /*******************Connect to Postgres*********************/
 /***********************************************************/
 const { Client, Pool } = require('pg');
-const client = new Client({
+const pool = new Pool({
   user: 'postgres',
   host: 'db', // Uses Docker network to connect
   database: 'postgres',
   password: 'password',
   port: 5432,
-})
+});
 const connectToDB = () => {
-  client.connect()
-    .then(resp => {
+  pool.connect()
+    .then(client => {
       console.log(`Connected to Postgres DB!`);
+      client.release();
     })
     .catch(err => {
       console.log(`Couldn't connect to Postgres, try again.`);
@@ -48,6 +49,7 @@ const setExAsync = promisify(redisClient.setex).bind(redisClient);
 // getAsync('liam')
 //   .then((data) => console.log(data === null))
 //   .catch((data) => console.log('no', data));
+
 
 /***********************************************************/
 /*************************Middleware************************/
@@ -94,42 +96,51 @@ app.get('/reviews', (req, res) => {
   }
 
   // Query for reviews
-  client.query(`
-    SELECT * FROM reviews
-    WHERE product_id = $1
-    ORDER BY $2 DESC;
-  `
-  , [product_id, sortParam])
-    .then(dbRes => {
-      //console.log(`Received response from query: `, dbRes.rows);
+  pool.connect()
+    .then(client => {
 
-      // Slice according to page and count
-      const reviewArray = dbRes.rows.slice(page*count, page*count + count);
+    return client.query(`
+        SELECT * FROM reviews
+        WHERE product_id = $1
+        ORDER BY $2 DESC;
+      `
+      , [product_id, sortParam])
+        .then(dbRes => {
+          //console.log(`Received response from query: `, dbRes.rows);
 
-      reviewArray.forEach((revObj) => {
-        // For each review object, add it to results (need to get photos still)
-        respObj.results.push(
-          {
-            review_id: revObj.id,
-            rating: revObj.rating,
-            summary: revObj.summary,
-            recommend: revObj.recommend,
-            response: revObj.response,
-            body: revObj.body,
-            date: revObj.date,
-            reviewer_name: revObj.reviewer_name,
-            helpfulness: revObj.helpfulness,
-            photos: [], // Need to query photos table
-          }
-        )
-      })
+          // Slice according to page and count
+          const reviewArray = dbRes.rows.slice(page*count, page*count + count);
 
-      res.send(respObj);
+          reviewArray.forEach((revObj) => {
+            // For each review object, add it to results (need to get photos still)
+            respObj.results.push(
+              {
+                review_id: revObj.id,
+                rating: revObj.rating,
+                summary: revObj.summary,
+                recommend: revObj.recommend,
+                response: revObj.response,
+                body: revObj.body,
+                date: revObj.date,
+                reviewer_name: revObj.reviewer_name,
+                helpfulness: revObj.helpfulness,
+                photos: [], // Need to query photos table
+              }
+            )
+          })
+
+          client.release();
+          res.send(respObj);
+        })
+        .catch(err => {
+          console.log(`Error when querying: `, err);
+          client.release();
+          res.send(404);
+        });
     })
     .catch(err => {
-      console.log(`Error when querying: `, err);
-      res.send(404);
-    })
+      console.log(`Error connecting to DB!`, err);
+    });
 })
 
 
@@ -148,48 +159,55 @@ app.get('/reviews/meta', (req, res) => {
     characteristics: {}
   };
 
-  client.query(`
-    SELECT * FROM meta_data
-    WHERE product_id = $1
-  `
-  , [product_id])
-    .then(dbRes => {
-      //console.log(dbRes.rows);
-      if (dbRes.rows.length === 0) {
-        throw 'Product has no meta_data!';
-      }
+  pool.connect()
+    .then(client => {
 
-      const metaObj = dbRes.rows[0];
-      // Now that we have meta data, parse it and format correctly
-
-      respObj.ratings["1"] = metaObj.stars1;
-      respObj.ratings["2"] = metaObj.stars2;
-      respObj.ratings["3"] = metaObj.stars3;
-      respObj.ratings["4"] = metaObj.stars4;
-      respObj.ratings["5"] = metaObj.stars5;
-
-      respObj.recommended["0"] = metaObj.rec_false;
-      respObj.recommended["1"] = metaObj.rec_true;
-
-      // Characteristics
-      for (let key in metaObj) {
-        if (key.slice(0, 4) === "sum_" && metaObj[key] > 0) {
-          const char = key.slice(4);
-          respObj.characteristics[char] = {
-            value: (metaObj[key] / metaObj.total_count).toFixed(3)
+    return client.query(`
+        SELECT * FROM meta_data
+        WHERE product_id = $1
+      `
+      , [product_id])
+        .then(dbRes => {
+          //console.log(dbRes.rows);
+          if (dbRes.rows.length === 0) {
+            throw 'Product has no meta_data!';
           }
-        }
-      }
 
-      res.send(respObj);
+          const metaObj = dbRes.rows[0];
+          // Now that we have meta data, parse it and format correctly
+
+          respObj.ratings["1"] = metaObj.stars1;
+          respObj.ratings["2"] = metaObj.stars2;
+          respObj.ratings["3"] = metaObj.stars3;
+          respObj.ratings["4"] = metaObj.stars4;
+          respObj.ratings["5"] = metaObj.stars5;
+
+          respObj.recommended["0"] = metaObj.rec_false;
+          respObj.recommended["1"] = metaObj.rec_true;
+
+          // Characteristics
+          for (let key in metaObj) {
+            if (key.slice(0, 4) === "sum_" && metaObj[key] > 0) {
+              const char = key.slice(4);
+              respObj.characteristics[char] = {
+                value: (metaObj[key] / metaObj.total_count).toFixed(3)
+              }
+            }
+          }
+
+          client.release();
+          res.send(respObj);
+        })
+        .catch(err => {
+          console.log(`Error in retrieving meta data!`, err);
+          client.release();
+          res.send(404);
+        });
     })
     .catch(err => {
-      console.log(`Error in retrieving meta data!`, err);
-      res.send(404);
-    })
+      console.log(`Error connecting to DB!`, err);
+    });
 
-
-  //res.send('This is the review API!');
 })
 
 
@@ -199,23 +217,32 @@ app.get('/reviews/meta', (req, res) => {
 app.put('/reviews/:review_id/helpful', (req, res) => {
   console.log(`Received API request for /reviews/${req.params.review_id}/helpful`);
 
-  client.query(`
-    UPDATE reviews
-    SET helpfulness = helpfulness + 1
-    WHERE id = $1;
-  `, [Number(req.params.review_id)])
-    .then(dbRes => {
-      //console.log('DB Response: ', dbRes);
-      if (dbRes.rowCount === 0) {
-        throw 'Product does not exist';
-      }
+  pool.connect()
+    .then(client => {
 
-      res.send(`Successfully incremented helpful count for review id: ${req.params.review_id}`);
+      return client.query(`
+        UPDATE reviews
+        SET helpfulness = helpfulness + 1
+        WHERE id = $1;
+      `, [Number(req.params.review_id)])
+        .then(dbRes => {
+          //console.log('DB Response: ', dbRes);
+          if (dbRes.rowCount === 0) {
+            throw 'Product does not exist';
+          }
+
+          client.release();
+          res.send(`Successfully incremented helpful count for review id: ${req.params.review_id}`);
+        })
+        .catch(err => {
+          console.log(`Error in incrementing helpful count for that review id: `, err);
+          client.release();
+          res.status(204).send(`Error in incrementing helpful count for that review id`)
+        });
     })
     .catch(err => {
-      console.log(`Error in incrementing helpful count for that review id: `, err);
-      res.status(204).send(`Error in incrementing helpful count for that review id`)
-    })
+      console.log(`Error connecting to DB!`, err);
+    });
 });
 
 
@@ -226,23 +253,32 @@ app.put('/reviews/:review_id/helpful', (req, res) => {
 app.put('/reviews/:review_id/report', (req, res) => {
   console.log(`Received API request for /reviews/${req.params.review_id}/report`);
 
-  client.query(`
-    UPDATE reviews
-    SET reported = TRUE
-    WHERE id = $1;
-  `, [Number(req.params.review_id)])
-    .then(dbRes => {
-      //console.log('DB Response: ', dbRes);
-      if (dbRes.rowCount === 0) {
-        throw 'Product does not exist';
-      }
+  pool.connect()
+    .then(client => {
+      return client.query(`
+        UPDATE reviews
+        SET reported = TRUE
+        WHERE id = $1;
+      `, [Number(req.params.review_id)])
+        .then(dbRes => {
+          //console.log('DB Response: ', dbRes);
+          if (dbRes.rowCount === 0) {
+            throw 'Product does not exist';
+          }
 
-      res.send(`Successfully reported review with review id: ${req.params.review_id}`);
+          client.release();
+          res.send(`Successfully reported review with review id: ${req.params.review_id}`);
+        })
+        .catch(err => {
+          console.log(`Error in reporting that review id: `, err);
+          client.release();
+          res.status(204).send(`Error in reporting that review id`)
+        });
     })
     .catch(err => {
-      console.log(`Error in reporting that review id: `, err);
-      res.status(204).send(`Error in reporting that review id`)
-    })
+      console.log(`Error connecting to DB!`, err);
+    });
+
 });
 
 
@@ -266,21 +302,30 @@ app.post('/reviews', (req, res) => {
     characteristics
   } = req.body;
 
-  client.query(`
-    INSERT INTO reviews (product_id, rating, summary, body, recommend, reviewer_name, reviewer_email)
-    VALUES ($1, $2, $3, $4, $5, $6, $7);
-  `, [product_id, rating, summary, body, recommend, name, email])
-    .then(dbRes => {
-      console.log(`Successfully inserted into reviews table!`);
+  pool.connect()
+    .then(client => {
 
-      // Would also need to update photos, characteristics, and meta data table
+      return client.query(`
+        INSERT INTO reviews (product_id, rating, summary, body, recommend, reviewer_name, reviewer_email)
+        VALUES ($1, $2, $3, $4, $5, $6, $7);
+      `, [product_id, rating, summary, body, recommend, name, email])
+        .then(dbRes => {
+          console.log(`Successfully inserted into reviews table!`);
 
-      res.send(201);
+          // Would also need to update photos, characteristics, and meta data table
+
+          client.release();
+          res.send(201);
+        })
+        .catch(err => {
+          console.log(`Could not insert into DB!`, err);
+          client.release();
+          res.send(404);
+        });
     })
     .catch(err => {
-      console.log(`Could not insert into DB!`, err);
-      res.send(404);
-    })
+      console.log(`Error connecting to DB!`, err);
+    });
 
 });
 
