@@ -2,18 +2,28 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const redis = require('redis');
 const app = express();
-const port = 4444;
+const {
+  EXPRESS_PORT,
+  REDIS_HOST,
+  REDIS_PORT,
+  PG_HOST,
+  PG_PORT,
+  PG_USER,
+  PG_DATABASE,
+  PG_PASSWORD,
+} = require('./config.js');
+
 
 /***********************************************************/
 /*******************Connect to Postgres*********************/
 /***********************************************************/
 const { Client, Pool } = require('pg');
 const pool = new Pool({
-  user: 'postgres',
-  host: 'db', // Uses Docker network to connect
-  database: 'postgres',
-  password: 'password',
-  port: 5432,
+  user: PG_USER,
+  host: PG_HOST,
+  database: PG_DATABASE,
+  password: PG_PASSWORD,
+  port: PG_PORT,
 });
 const connectToDB = () => {
   pool.connect()
@@ -34,8 +44,8 @@ connectToDB();
 /*******************Connect to Redis************************/
 /***********************************************************/
 const redisClient = redis.createClient({
-  host: 'redis', // Docker network
-  port: 6379
+  host: REDIS_HOST,
+  port: REDIS_PORT
 });
 
 redisClient.on("error", (error) => {
@@ -337,6 +347,6 @@ app.post('/reviews', (req, res) => {
 /********************/
 /*****Start-Up*******/
 /********************/
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}!`)
+app.listen(EXPRESS_PORT, () => {
+  console.log(`Example app listening on port ${EXPRESS_PORT}!`)
 });
