@@ -69,8 +69,8 @@ app.use(bodyParser.json());
 
 
 //http://100.25.168.124/loaderio-eadb06ef7fa24ede3c3f4b0f355a7bd4.txt
-app.get('/loaderio-eadb06ef7fa24ede3c3f4b0f355a7bd4.txt', (req, res) => {
-  res.send('loaderio-eadb06ef7fa24ede3c3f4b0f355a7bd4');
+app.get('/loaderio-2ce382a9611b802af3075caa2837e0ab.txt', (req, res) => {
+  res.send('loaderio-2ce382a9611b802af3075caa2837e0ab');
 })
 
 
