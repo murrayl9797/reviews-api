@@ -16,7 +16,7 @@ services:
     volumes:
       - "./server:/usr/src/app"
     ports:
-      - 4444:4444
+      - "${EXPOSED_PORT}:4444"
     depends_on:
       - db
   redis:
