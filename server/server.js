@@ -12,7 +12,8 @@ const {
   PG_DATABASE,
   PG_PASSWORD,
 } = require('./config.js');
-
+const REDIS_EXPIRE_TIME = 45;
+let redisCounter = 0;
 
 /***********************************************************/
 /*******************Connect to Postgres*********************/
@@ -91,7 +92,7 @@ const cache = (req, res, next) => {
         next();
       } else {
         // If not null, send back to client
-        console.log(`Used the Redis Cache!`);
+        console.log(`Used the Redis Cache ${++redisCounter}!`);
         res.send(JSON.parse(redisValue));
       }
     })
@@ -170,7 +171,7 @@ app.get('/reviews', cache, (req, res) => {
           client.release();
 
           // Cache response (key, time [seconds], value)
-          setExAsync(product_id+':review', 30, JSON.stringify(respObj))
+          setExAsync(product_id+':review', REDIS_EXPIRE_TIME, JSON.stringify(respObj))
             .catch(err => {
               console.log(`Error setting redis key!`, err);
             });
@@ -245,7 +246,7 @@ app.get('/reviews/meta', cache, (req, res) => {
           client.release();
 
           // Cache response (key, time [seconds], value)
-          setExAsync(product_id+':meta', 30, JSON.stringify(respObj))
+          setExAsync(product_id+':meta', REDIS_EXPIRE_TIME, JSON.stringify(respObj))
             .catch(err => {
               console.log(`Error setting redis key!`, err);
             });
