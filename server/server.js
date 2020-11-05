@@ -73,21 +73,48 @@ app.get('/loaderio-2ce382a9611b802af3075caa2837e0ab', (req, res) => {
   res.send('loaderio-2ce382a9611b802af3075caa2837e0ab');
 })
 
+// Middleware for Redis Cache
+const cache = (req, res, next) => {
+  const product_id = req.query.product_id;
+  const path = req.route.path;
 
+  //console.log('Request URL!: ', path);
+  const revsOrMeta = path === '/reviews' ? ':review' : ':meta';
+  //console.log('Reviews or meta:', revsOrMeta);
+
+  //console.log(`Key querying:`, product_id+revsOrMeta);
+  getAsync(product_id+revsOrMeta)
+    .then(redisValue => {
+      //console.log(`Redis value:`, redisValue);
+      if (!redisValue) {
+        // If not found, keep going
+        next();
+      } else {
+        // If not null, send back to client
+        console.log(`Used the Redis Cache!`);
+        res.send(JSON.parse(redisValue));
+      }
+    })
+    .catch(err => {
+      console.log(`Error querying Redis Cache!`);
+    })
+
+
+}
 
 /***********************************************************/
 /*************************Routes****************************/
 /***********************************************************/
 app.get('/', (req, res) => {
-  console.log(`Received API request for /`);
+  //console.log(`Received API request for /`);
   res.send('This is the review API!');
 })
 
 /************************************/
 /***Main get request for reviews*****/
 /************************************/
-app.get('/reviews', (req, res) => {
-  console.log(`Received API request for /reviews`);
+app.get('/reviews', cache, (req, res) => {
+  //console.log(`Received API request for /reviews`);
 
   // Parse query parameters
   const product_id = req.query.product_id || 1;
@@ -139,7 +166,16 @@ app.get('/reviews', (req, res) => {
             )
           })
 
+          // Release client
           client.release();
+
+          // Cache response (key, time [seconds], value)
+          setExAsync(product_id+':review', 30, JSON.stringify(respObj))
+            .catch(err => {
+              console.log(`Error setting redis key!`, err);
+            });
+
+          // Send back to client
           res.send(respObj);
         })
         .catch(err => {
@@ -157,10 +193,10 @@ app.get('/reviews', (req, res) => {
 /************************************/
 /***Get request for meta data********/
 /************************************/
-app.get('/reviews/meta', (req, res) => {
-  console.log(`Received API request for /reviews/meta`);
+app.get('/reviews/meta', cache, (req, res) => {
+  //console.log(`Received API request for /reviews/meta`);
 
-  const product_id = req.query.product_id;
+  const product_id = req.query.product_id || 1;
 
   const respObj = {
     product_id: product_id,
@@ -205,7 +241,16 @@ app.get('/reviews/meta', (req, res) => {
             }
           }
 
+          // Release client
           client.release();
+
+          // Cache response (key, time [seconds], value)
+          setExAsync(product_id+':meta', 30, JSON.stringify(respObj))
+            .catch(err => {
+              console.log(`Error setting redis key!`, err);
+            });
+
+          // Send back to client
           res.send(respObj);
         })
         .catch(err => {
@@ -225,7 +270,7 @@ app.get('/reviews/meta', (req, res) => {
 /*****Put request for helpful********/
 /************************************/
 app.put('/reviews/:review_id/helpful', (req, res) => {
-  console.log(`Received API request for /reviews/${req.params.review_id}/helpful`);
+  //console.log(`Received API request for /reviews/${req.params.review_id}/helpful`);
 
   pool.connect()
     .then(client => {
@@ -261,7 +306,7 @@ app.put('/reviews/:review_id/helpful', (req, res) => {
 /*****Put request for report*********/
 /************************************/
 app.put('/reviews/:review_id/report', (req, res) => {
-  console.log(`Received API request for /reviews/${req.params.review_id}/report`);
+  //console.log(`Received API request for /reviews/${req.params.review_id}/report`);
 
   pool.connect()
     .then(client => {
@@ -296,7 +341,7 @@ app.put('/reviews/:review_id/report', (req, res) => {
 /*****Post request for review********/
 /************************************/
 app.post('/reviews', (req, res) => {
-  console.log(`Received API post request for /reviews`);
+  //console.log(`Received API post request for /reviews`);
 
   //console.log(`Body: `, req.body);
   // Destructure the received review
@@ -320,7 +365,7 @@ app.post('/reviews', (req, res) => {
         VALUES ($1, $2, $3, $4, $5, $6, $7);
       `, [product_id, rating, summary, body, recommend, name, email])
         .then(dbRes => {
-          console.log(`Successfully inserted into reviews table!`);
+          //console.log(`Successfully inserted into reviews table!`);
 
           // Would also need to update photos, characteristics, and meta data table
 
