@@ -34,7 +34,7 @@ After that, the DB should be up and ready to go! If you'd like to understand wha
 
 ## Performance Metrics
 
-Here are a couple of screenshots detailing the performance of the API as I used Loader.io to stress test with varying amounts of throughput.
+Here are a couple of screenshots detailing the performance of the API when stress tested with Loader.io. A variety of tests were run with different amounts of throughput on different versions of the API.
 
 
 ![Image of example loaderio test](./sdcTestScreenshots/round3(yesPools-yesRedis)/redis850cpsRange1000.png)
