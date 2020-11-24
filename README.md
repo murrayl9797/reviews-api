@@ -29,5 +29,21 @@ After these have loaded, join two of the tables, add the indexes to greatly impr
 * `npm run cleanDB`
 
 
-
 After that, the DB should be up and ready to go! If you'd like to understand what these scripts are doing, check out the package.json in the root directory to explore more.
+
+
+## Performance Metrics
+
+Here are a couple of screenshots detailing the performance of the API as I used Loader.io to stress test with varying amounts of throughput.
+
+
+![Image of example loaderio test](./sdcTestScreenshots/round3(yesPools-yesRedis)/redis850cpsRange1000.png)
+Above is an example test from Loader.io
+
+
+![Image of loaderio testsetup](./sdcTestScreenshots/redisSetup.png)
+Above is an example of the setup for one of the Loader.io tests
+
+
+![Graph of results](./sdcTestScreenshots/summaryFirst3Tests.png)
+Above is a graph detailing the average response times in all of the tests I ran to find the point at which the API was overloaded under various circumstances
