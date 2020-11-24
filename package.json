@@ -1,0 +1,30 @@
+{
+  "name": "reviews-api",
+  "version": "1.0.0",
+  "description": "API Set up to handle front end requests for Reviews and Ratings information.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "load1": "node database/sqlHelperScripts/loaders/charRevs.js",
+    "load2": "node database/sqlHelperScripts/loaders/chars.js",
+    "load3": "node database/sqlHelperScripts/loaders/revPhotos.js",
+    "load4": "node database/sqlHelperScripts/loaders/revs.js",
+    "loadAll": "npm run load1 && npm run load2 && npm run load3 && npm run load4",
+    "join": "node database/sqlHelperScripts/joinCharRevs.js",
+    "addIndexes": "node database/sqlHelperScripts/addIndexes.js",
+    "initMeta": "node database/sqlHelperScripts/initMetaTable.js",
+    "serializeRevs": "node database/sqlHelperScripts/makeRevSerial.js",
+    "cleanDB": "npm run join && npm run addIndexes && npm run initMeta && npm run serializeRevs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sdc-cirrus/reviews-api.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sdc-cirrus/reviews-api/issues"
+  },
+  "homepage": "https://github.com/sdc-cirrus/reviews-api#readme"
+}

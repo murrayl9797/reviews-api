@@ -10,7 +10,6 @@ const {
   DB_PORT,
   CSV_PATH
 } = require('../config.js');
-//console.log(CSV_PATH, 'HELLELELEELO');
 
 //https://images.unsplash.com/photo-1555689502-c4b22d76c56f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=668&q=80
 //id,review_id,url
@@ -45,7 +44,7 @@ pool.connect()
     `);
   })
   .then(res => {
-    console.log(`Successfully created ${tableName} table! `, Object.keys(res));
+    console.log(`Successfully created ${tableName} table! `);
 
     // Actually pipe the CSV's now
     console.log(`Begin piping ${tableName} CSV!`);

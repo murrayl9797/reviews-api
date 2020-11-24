@@ -23,6 +23,9 @@ const pool = new Client({
 });
 
 
+/*************************************************/
+/*Code below was an old strategy to load the data*/
+/*************************************************/
 // Code to stream CSV's into DB
 /*let csvData = [];
 const fastcsv = require("fast-csv");
@@ -92,7 +95,7 @@ pool.connect()
     `);
   })
   .then(res => {
-    console.log(`Successfully created ${tableName} table! `, Object.keys(res));
+    console.log(`Successfully created ${tableName} table! `);
 
     // Actually pipe the CSV's now
     console.log(`Begin piping ${tableName} CSV!`);

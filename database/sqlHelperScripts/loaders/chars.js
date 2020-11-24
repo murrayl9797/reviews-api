@@ -43,7 +43,7 @@ pool.connect()
     `);
   })
   .then(res => {
-    console.log(`Successfully created ${tableName} table! `, Object.keys(res));
+    console.log(`Successfully created ${tableName} table! `);
 
     // Actually pipe the CSV's now
     console.log(`Begin piping ${tableName} CSV!`);
